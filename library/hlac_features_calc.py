@@ -46,13 +46,7 @@ def hlac_features_calc(img):
         for y in range(0, height - window_size + 1):
             for x in range(0, width - window_size + 1):
                 local_area = img[y: y + window_size, x: x + window_size]  # area of image correspond to filter
-                product = 1
-                for x1 in range(0, window_size):
-                    for x2 in range(0, window_size):
-                        if (filter[x1, x2] != 0):
-                            product *= local_area[x1, x2]
-                features[i] += product
-
+                np.prod(local_area[np.nonzero(filter)])
     return features
 
 
