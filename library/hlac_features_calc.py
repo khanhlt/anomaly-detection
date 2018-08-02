@@ -46,10 +46,16 @@ def hlac_features_calc(img):
         for y in range(0, height - window_size + 1):
             for x in range(0, width - window_size + 1):
                 local_area = img[y: y + window_size, x: x + window_size]  # area of image correspond to filter
-                np.prod(local_area[np.nonzero(filter)])
+                features[i] += np.prod(local_area[np.nonzero(filter)])
     return features
 
 
+def batch_hlac_calc(arr):
+    feature_arr = []
+    for img in arr:
+        feature = hlac_features_calc(img)
+        feature_arr.append(feature)
+    return feature_arr
 
 # test
 if __name__ == "__main__":
