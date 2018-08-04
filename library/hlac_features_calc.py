@@ -1,6 +1,5 @@
 import numpy as np
 
-
 # input must be a m*n array of float from 0->1
 def hlac_features_calc(img):
     window_size = 3
@@ -36,6 +35,7 @@ def hlac_features_calc(img):
 
     height = img.shape[0]
     width = img.shape[1]
+
     num_filter = len(filter_list)
     features = np.zeros(num_filter)
 
@@ -48,14 +48,6 @@ def hlac_features_calc(img):
                 local_area = img[y: y + window_size, x: x + window_size]  # area of image correspond to filter
                 features[i] += np.prod(local_area[np.nonzero(filter)])
     return features
-
-
-def batch_hlac_calc(arr):
-    feature_arr = []
-    for img in arr:
-        feature = hlac_features_calc(img)
-        feature_arr.append(feature)
-    return feature_arr
 
 # test
 if __name__ == "__main__":
@@ -84,3 +76,5 @@ if __name__ == "__main__":
 
     print(a)
     print('\n', b)
+    print(features_1)
+    print(features_2)
