@@ -2,7 +2,7 @@
 
 ## Methods
 * Autoencoder: [http://dm.snu.ac.kr/static/docs/TR/SNUDM-TR-2015-03.pdf](http://dm.snu.ac.kr/static/docs/TR/SNUDM-TR-2015-03.pdf)
-* HLAC (Higer-order Local Auto-Correlation)
+* HLAC (Higher-order Local Auto-Correlation)
 features extraction: [https://core.ac.uk/download/pdf/56664348.pdf](https://core.ac.uk/download/pdf/56664348.pdf)
 
 ## Usage

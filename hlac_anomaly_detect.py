@@ -1,38 +1,31 @@
 import numpy as np
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import normalize
-from sklearn.model_selection import train_test_split
-from library.preprocess import load_data, IMG_HEIGHT, IMG_WIDTH
 from library.hlac_features_calc import hlac_features_calc
-from multiprocessing import Pool
+from library.preprocess import load_data
 from numpy import linalg as LA
+from multiprocessing import Pool
 
-processes = 8
 hlac_dim = 25
-train, test, test_label = load_data()
-train = train.astype('float32') / 255.
-test = test.astype('float32') / 255.
-
-train = train.reshape(len(train), IMG_HEIGHT, IMG_WIDTH)
-test = test.reshape(len(test), IMG_HEIGHT, IMG_WIDTH)
 
 if __name__ == "__main__":
-    hlac_train = Pool(processes=processes).map(hlac_features_calc, train)
-    hlac_test = Pool(processes=processes).map(hlac_features_calc, test)
+    train, test, test_label = load_data()
+
+    hlac_train = Pool(processes=5).map(hlac_features_calc, train)
+    hlac_train = np.asarray(hlac_train)
+    hlac_train = hlac_train.reshape(len(hlac_train), hlac_dim)
+
+    hlac_test = Pool(processes=8).map(hlac_features_calc, test)
     hlac_test = np.asarray(hlac_test)
-    X = np.asmatrix(hlac_train)
-    print(X.shape)
+    hlac_test = hlac_test.reshape(len(hlac_test), hlac_dim)
 
-    # do PCA by myself
-    S = X.std(0)
-    U = X.mean(0)
-    X_norm = (X - U)/S
+    S = hlac_train.std(0)
+    U = hlac_train.mean(0)
+    X_norm = (hlac_train - U) / S  # normalize X
     C = X_norm.transpose().dot(X_norm) / (len(hlac_train) - 1)
+    e_values, e_vectors = LA.eig(C)  # eigenvalues & eigenvectors of matrix C
 
-    e_values, e_vectors = LA.eig(C)
+    print("Eigenvalues: ", e_values)
 
-
-    TH = 0.99999
+    TH = 0.999  # threshold to calculate K - dimension after compress (TH < 1, usually set as 0.99, 0.999,...)
     K = 0
     n_K = 0.
     sum_ev = np.sum(e_values)
@@ -45,19 +38,20 @@ if __name__ == "__main__":
     print("new dimension: ", K)
 
     U_K = e_vectors[0:K]
-    normal_space = np.transpose(U_K).dot(U_K)
-
+    normal_space = np.identity(hlac_dim) - np.transpose(U_K).dot(U_K)
+    print("normal space: ", normal_space.shape)
     # calculate threshold = mean of anomaly_degree on training set
-    anomaly_degree_train = np.zeros(len(hlac_train))
-    i = 0
+    # anomaly_degree_train = np.zeros(len(hlac_train))
+    anomaly_degree_train = []
     for x in hlac_train:
-        # x = (x - U) / S
-        anomaly_degree = x.dot(normal_space).dot(np.transpose(x))
-        anomaly_degree_train[i] = anomaly_degree
-        i += 1
-    threshold = np.mean(anomaly_degree_train)
-    # threshold = np. max(anomaly_degree_train)
-    print("Threshold: ", threshold)
+        x = (x - U) / S
+        anomaly_degree = np.prod(x.dot(normal_space).dot(np.transpose(x)))
+        anomaly_degree_train.append(anomaly_degree)
+    threshold = np.mean(anomaly_degree_train) + np.std(anomaly_degree_train)
+    print("Threshold (mean): ", threshold)
+    print("Max: ", np.max(anomaly_degree_train))
+    print("Min: ", np.min(anomaly_degree_train))
+    print("Std: ", np.std(anomaly_degree_train))
 
 
     # test
@@ -71,11 +65,12 @@ if __name__ == "__main__":
     '''
     tp, fp, tn, fn = 0., 0., 0., 0.
 
-    # anomaly_degree < threshold --> normal; anomaly_degree > threshold --> anomaly
+    # anomaly_degree < threshold --> normal
+    # anomaly_degree > threshold --> anomaly
     i = 0
     for x in hlac_test:
-        # x = (x - U) / S
-        anomaly_degree = x.dot(normal_space).dot(np.transpose(x))
+        x = (x - U) / S
+        anomaly_degree = np.prod(x.dot(normal_space).dot(np.transpose(x)))
         if (anomaly_degree < threshold):  # --> normal
             print(test_label[i] + ': ' + str(anomaly_degree) + ' --> normal')
             if (test_label[i] == 'normal'):  # true negative
@@ -96,10 +91,6 @@ if __name__ == "__main__":
     print('\nRecall: %.3f' % recall)
     print('\nAccuracy: %.3f' % ((tp + tn) / (tp + tn + fn + fp)))
     print('\nHarmonic mean (f1_score): %.3f' % ((2 * precision * recall) / (precision + recall)))
-
-
-
-
 
 
 

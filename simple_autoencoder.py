@@ -1,11 +1,17 @@
-from library.preprocess import load_data, IMG_WIDTH, IMG_HEIGHT
+from library.preprocess import load_data
 from keras.layers import Input, Dense
 from keras import Model
 from sklearn.model_selection import train_test_split
 import numpy as np
 
+IMG_WIDTH, IMG_HEIGHT = 288, 432
+
 epochs = 30
 train, test, test_label = load_data()
+train = np.asarray(train)
+test = np.asarray(test)
+test_label = np.asarray(test_label)
+
 train = train.astype('float32') / 255.
 test = test.astype('float32') / 255.
 

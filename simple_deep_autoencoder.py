@@ -1,13 +1,18 @@
-from library.preprocess import load_data, IMG_WIDTH, IMG_HEIGHT
+from library.preprocess import load_data
 from keras.layers import Input, Dense
 from keras import Model
 from sklearn.model_selection import train_test_split
 import numpy as np
 
+IMG_HEIGHT, IMG_WIDTH = 288, 432
 epochs = 30
 train, test, test_label = load_data()
 train = train.astype('float32') / 255.
 test = test.astype('float32') / 255.
+
+train = np.asarray(train)
+test = np.asarray(test)
+test_label = np.asarray(test_label)
 
 train = train.reshape((len(train), np.prod(train.shape[1:])))
 test = test.reshape((len(test), np.prod(test.shape[1:])))
@@ -19,7 +24,7 @@ img_shape = train[0].shape
 
 # autoencoder layers
 input_img = Input(shape=img_shape)
-encoding_dim = IMG_WIDTH * IMG_HEIGHT  # 32 floats
+encoding_dim = IMG_WIDTH * IMG_HEIGHT
 
 encoded = Dense(128, activation='relu')(input_img)
 encoded = Dense(64, activation='relu')(encoded)
@@ -49,13 +54,13 @@ print(threshold)
 * threshold = mean(x_test_loss)
 * decrease accuracy but can detect almost anomalies
 '''
-# sum, i = 0., 0.
-# for x in x_test:
-#     x = np.expand_dims(x, axis=0)
-#     loss = autoencoder.test_on_batch(x, x)
-#     sum += loss
-#     i += 1
-# threshold = sum / i
+sum, i = 0., 0.
+for x in x_test:
+    x = np.expand_dims(x, axis=0)
+    loss = autoencoder.test_on_batch(x, x)
+    sum += loss
+    i += 1
+threshold = sum / i
 
 
 '''
